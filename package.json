@@ -1,0 +1,33 @@
+{
+  "name": "epitaka-bot",
+  "version": "1.0.0",
+  "description": "bot for epitaka server",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon .",
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DemonWayne/epitaka-bot.git"
+  },
+  "author": "Dave Shelby",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DemonWayne/epitaka-bot/issues"
+  },
+  "homepage": "https://github.com/DemonWayne/epitaka-bot#readme",
+  "devDependencies": {
+    "eslint": "^8.12.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "nodemon": "^2.0.15",
+    "prettier": "^2.6.1"
+  },
+  "dependencies": {
+    "@sapphire/framework": "^2.4.1",
+    "@sapphire/plugin-logger": "^2.2.0",
+    "discord.js": "^13.6.0",
+    "dotenv": "^16.0.0"
+  }
+}
