@@ -1,1 +1,1 @@
-worked: node index.js
+worked: node .
