@@ -23,9 +23,7 @@ module.exports = class extends Command {
       embeds: [
         new MessageEmbed()
           .setColor(color)
-          .setDescription(
-            `**Пинг бота: \`${latency}ms\`\nПинг API: \`${Math.round(this.container.client.ws.ping)}ms\`**`,
-          ),
+          .setDescription(`**Пинг бота: \`${latency}ms\`\API: \`${Math.round(this.container.client.ws.ping)}ms\`**`),
       ],
     });
   }
