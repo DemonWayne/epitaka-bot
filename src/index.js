@@ -10,6 +10,7 @@ const client = new SapphireClient({
   devs: ['481344295354368020', '373206800196960268', '503153801235267584'],
   defaultPrefix: '/',
   disableMentionPrefix: true,
+  restSweepInterval: 120,
 });
 
 client.login(process.env.DISCORD_TOKEN);
