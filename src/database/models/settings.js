@@ -2,22 +2,19 @@
 
 const { model, Schema } = require('mongoose');
 
-const GuildSchema = new Schema(
+const SettingSchema = new Schema(
   {
     guild: { type: String, required: true },
     moderation: {
-      // Available commands
       allowedCommands: { type: [String] },
       headModRoles: { type: [String] },
       modRoles: { type: [String] },
     },
     logs: {
-      sup_logChannel: { type: String },
-      mod_logChannel: { type: String },
+      mod: { type: String },
     },
-    createdAt: { type: Date, default: Date.now },
   },
-  { versionKey: false },
+  { versionKey: false, timestamps: true },
 );
 
-module.exports = model('Guild', GuildSchema);
+module.exports = model('Setting', SettingSchema);
