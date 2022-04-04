@@ -17,5 +17,9 @@ module.exports = class extends Listener {
         version: '1.0.0',
       });
     }
+
+    setInterval(() => {
+      require('../handlers/rolesbybutton').checkMessages(client);
+    }, 60 * 1000);
   }
 };
