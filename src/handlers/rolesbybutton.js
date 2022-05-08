@@ -1,89 +1,76 @@
+/* eslint-disable max-len */
+/* eslint-disable no-await-in-loop */
 /* eslint-disable newline-per-chained-call */
 'use strict';
 
 const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { rbb } = require('../data');
 
 exports.checkMessages = async client => {
-  const guild = client.guilds.cache.get('957401630947561512');
-  if (!guild) return console.error('[RBB] Сервер не найден');
+  for await (const [guild_id, { channel: channel_id, buttons }] of Object.entries(rbb)) {
+    if (!guild_id || !channel_id || !buttons) return console.error(`[RBB] Нет настроек для сервера ${guild_id}!`);
+    const guild = client.guilds.cache.get(guild_id);
+    if (!guild) return console.error('[RBB] Сервер не найден');
 
-  const channel = guild.channels.cache.get('960668949236809810');
-  if (!channel) return console.error('[RBB] Канал не найден');
+    let channel = guild.channels.cache.get(channel_id);
+    if (!channel) return console.error('[RBB] Канал не найден');
 
-  const messages = await channel.messages.fetch({ limit: 2 });
-  if (!messages.size || messages.first().author.id !== client.user.id || messages.last().author.id !== client.user.id) {
-    await channel.bulkDelete(100);
-  } else if (messages.first().author.id === client.user.id && messages.last().author.id === client.user.id) {
-    return true;
+    const messages = await channel.messages.fetch({ limit: 2 });
+    if (
+      !messages.size ||
+      messages.first().author.id !== client.user.id ||
+      messages.last().author.id !== client.user.id
+    ) {
+      try {
+        await channel.bulkDelete(100);
+      } catch (err) {
+        await channel.delete();
+        await channel.clone().then(ch => (channel = ch));
+      }
+    } else if (messages.first().author.id === client.user.id && messages.last().author.id === client.user.id) {
+      return true;
+    }
+
+    const description = [];
+    const components = [];
+    for (const [customId, { emoji, label, style, role }] of Object.entries(buttons)) {
+      if (components.length === 5) break;
+      description.push(`Нажмите ${emoji} ${label ?? ''}, чтобы получить роль <@&${role}>`);
+      components.push(
+        new MessageButton()
+          .setCustomId(customId)
+          .setEmoji(emoji ?? '🎮')
+          .setLabel(label ?? '')
+          .setStyle(style ?? 'PRIMARY'),
+      );
+    }
+    await channel.send({
+      embeds: [
+        new MessageEmbed()
+          .setColor(0x1de05b)
+          .setDescription(`На вашем Dualsence есть выбор!\n\n${description.join('\n\n')}`),
+      ],
+      components: [new MessageActionRow().addComponents(...components)],
+    });
   }
-
-  await channel.send({
-    embeds: [
-      new MessageEmbed()
-        .setColor(0x1de05b)
-        .setTitle('Здесь вы можете получить/снять себе роль.')
-        .setDescription('Нажмите на кнопку **X** на вашем Dualsence чтобы получить роль <@&957404673378246727>'),
-    ],
-    components: [
-      new MessageActionRow().addComponents(
-        new MessageButton().setCustomId('gey_mer').setStyle('PRIMARY').setEmoji('🇽'),
-      ),
-    ],
-  });
-
-  await channel.send({
-    embeds: [
-      new MessageEmbed().setColor(0x1de05b).setDescription(
-        // eslint-disable-next-line max-len
-        'На вашем Dualsence есть выбор!\n\nНажмите 🇽 + 🔼 — получить роль <@&960675239090606112>\n\nНажмите 🇽 + ◀️ — получить роль <@&960675233461833738>\n\nНажмите 🇽 + 🔽 — получить роль <@&960675233403117668>',
-      ),
-    ],
-    components: [
-      new MessageActionRow().addComponents(
-        new MessageButton().setCustomId('kser').setEmoji('🇽').setLabel('+ 🔼').setStyle('PRIMARY'),
-        new MessageButton().setCustomId('doter').setEmoji('🇽').setLabel('+ ◀️').setStyle('PRIMARY'),
-        new MessageButton().setCustomId('maincampf').setEmoji('🇽').setLabel('+ 🔽').setStyle('PRIMARY'),
-      ),
-    ],
-  });
 
   return true;
 };
 
-// TODO Рефакторинг части ниже
-
 exports.handleClick = interaction => {
-  if (interaction.customId === 'gey_mer') {
-    if (interaction.member.roles.cache.has('957404673378246727')) {
-      interaction.member.roles.remove('957404673378246727');
-      interaction.reply({ content: 'Роль гей мер снята!', ephemeral: true });
-    } else {
-      interaction.member.roles.add('957404673378246727');
-      interaction.reply({ content: 'Роль гей мер выдана!', ephemeral: true });
-    }
-  } else if (interaction.customId === 'kser') {
-    if (interaction.member.roles.cache.has('960675239090606112')) {
-      interaction.member.roles.remove('960675239090606112');
-      interaction.reply({ content: 'Роль ксер снята!', ephemeral: true });
-    } else {
-      interaction.member.roles.add('960675239090606112');
-      interaction.reply({ content: 'Роль ксер выдана!', ephemeral: true });
-    }
-  } else if (interaction.customId === 'doter') {
-    if (interaction.member.roles.cache.has('960675233461833738')) {
-      interaction.member.roles.remove('960675233461833738');
-      interaction.reply({ content: 'Роль дотер снята!', ephemeral: true });
-    } else {
-      interaction.member.roles.add('960675233461833738');
-      interaction.reply({ content: 'Роль дотер выдана!', ephemeral: true });
-    }
-  } else if (interaction.customId === 'maincampf') {
-    if (interaction.member.roles.cache.has('960675233403117668')) {
-      interaction.member.roles.remove('960675233403117668');
-      interaction.reply({ content: 'Роль майна снята!', ephemeral: true });
-    } else {
-      interaction.member.roles.add('960675233403117668');
-      interaction.reply({ content: 'Роль майна выдана!', ephemeral: true });
+  if (interaction.replied) return;
+  const guildData = rbb[interaction.guild.id];
+
+  for (const [customId, { role: role_id }] of Object.entries(guildData.buttons)) {
+    if (interaction.customId === customId) {
+      const role = interaction.guild.roles.cache.get(role_id);
+      if (interaction.member.roles.cache.has(role_id)) {
+        interaction.member.roles.remove(role_id);
+        interaction.reply({ content: `Роль ${role.name} снята!`, ephemeral: true });
+      } else {
+        interaction.member.roles.add(role_id);
+        interaction.reply({ content: `Роль ${role.name} выдана!`, ephemeral: true });
+      }
     }
   }
 };
