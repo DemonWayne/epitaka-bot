@@ -2,10 +2,13 @@
 
 const { Precondition } = require('@sapphire/framework');
 const { sendErrorMessage } = require('../utils');
+const Client = require('../database/models/client');
 
 module.exports = class extends Precondition {
-  run(message, command) {
-    const devs = this.container.client.options.devs;
+  async run(message, command) {
+    const client = await Client.findOne({ clientId: this.container.client.id });
+    if (!client) return true;
+    const { devs } = client;
     return devs.includes(message.author.id)
       ? this.ok()
       : this.error(
